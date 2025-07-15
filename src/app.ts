@@ -1,20 +1,26 @@
 import express, { Request, Response } from 'express';
+import cors from 'cors';
 
 const app = express();
-const port = 3000;
+const port = 3001;
+
+
 
 interface Artikel {
-    name: string
+    artikel: string
     menge: number
-    status: 'offen' | 'erledigt'
+    status: 'undone' | 'done'
+    kategorie: string
+    fav: "yes" | "no"
     id: number
 }
 
 const liste: Artikel[] = [
-    { id: 1, name: 'Milch', menge: 2, status: 'offen' },
-    { id: 2, name: 'Brot', menge: 1, status: 'erledigt' }
+    { id: 1, artikel: 'Milch', menge: 2, status: 'done', kategorie: "Kühl", fav: "no" },
+    { id: 2, artikel: 'Brot', menge: 1, status: 'undone', kategorie: "Essen", fav: "yes" }
 ]
 
+app.use(cors());
 app.use(express.json())
 
 app.get('/items', (req, res) => {
@@ -22,10 +28,11 @@ app.get('/items', (req, res) => {
 })
 
 app.post('/items', (req, res) => {
-    const { menge, name, status } = req.body
+    const { artikel, menge, status, kategorie, fav } = req.body
     const neueId = liste.length > 0 ? Math.max(...liste.map(item => item.id)) + 1 : 1
-    const neuerArtikel = { name, menge, status, id: neueId }
-    if (name.trim() === "") {
+    const neuerArtikel = { artikel, menge, status, kategorie, fav, id: neueId }
+    console.log("Neuer Artikel empfangen:", req.body)
+    if (artikel.trim() === "") {
         return res.status(404).json({ nachricht: 'Bitte einen gültigen Artikel eingeben' })
     }
     if (typeof menge !== 'number' || isNaN(menge)) {
@@ -34,18 +41,18 @@ app.post('/items', (req, res) => {
     if (menge <= 0) {
         return res.status(404).json({ nachricht: 'Menge muss größer als 0 sein' })
     }
-    if (status !== 'offen' && status !== 'erledigt') {
-        return res.status(404).json({ nachricht: 'Bitte gültigen Status eingeben (offen / erledigt' })
+    if (status !== 'undone' && status !== 'done') {
+        return res.status(404).json({ nachricht: 'Bitte gültigen Status eingeben (done / undone' })
     }
     liste.push(neuerArtikel)
     return res.status(201).json(neuerArtikel)
 })
 
 app.put('/items/:id', (req, res) => {
-    const { name, menge, status } = req.body
+    const { artikel, menge, status, kategorie, fav } = req.body
     const id = Number(req.params.id)
-
-    if (name.trim() === "") {
+    console.log("Artikel geändert:", req.body)
+    if (artikel.trim() === "") {
         return res.status(404).json({ nachricht: 'Bitte einen gültigen Artikel eingeben' })
     }
     if (typeof menge !== 'number' || isNaN(menge)) {
@@ -54,23 +61,24 @@ app.put('/items/:id', (req, res) => {
     if (menge <= 0) {
         return res.status(404).json({ nachricht: 'Menge muss größer als 0 sein' })
     }
-    if (status !== 'offen' && status !== 'erledigt') {
+    if (status !== 'undone' && status !== 'done') {
         return res.status(404).json({ nachricht: 'Bitte gültigen Status eingeben (offen / erledigt' })
     }
-    
+
     const artikelStelle = liste.findIndex(item => item.id === id)
     if (artikelStelle === -1) {
-        res.status(404).json({ nachricht: 'Artikel wurde nicht gefunden!' })
+        return res.status(404).json({ nachricht: 'Artikel wurde nicht gefunden!' })
     }
-    liste[artikelStelle] = { ...liste[artikelStelle], name, menge, status }
+    liste[artikelStelle] = { ...liste[artikelStelle], artikel, menge, status, kategorie, fav }
     return res.json(liste[artikelStelle])
 })
 
 app.delete('/items/:id', (req, res) => {
     const id = Number(req.params.id)
     const artikelStelle = liste.findIndex(item => item.id === id)
+    console.log("Artikel gelöscht:", req.body)
     if (artikelStelle === -1) {
-        res.status(404).json({ nachricht: 'Artikel wurde nicht gefunden!' })
+        return res.status(404).json({ nachricht: 'Artikel wurde nicht gefunden!' })
     }
     liste.splice(artikelStelle, 1)
 
@@ -78,5 +86,5 @@ app.delete('/items/:id', (req, res) => {
 })
 
 app.listen(port, () => {
-    console.log(`Server läuft auf http://localhost:${port}`)
+    return console.log(`Server läuft auf http://localhost:${port}`)
 })
