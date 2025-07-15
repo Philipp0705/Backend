@@ -22,7 +22,8 @@ app.use(express.json())
 
 app.get('/users/:user/items', (req, res) => {
     const user = req.params.user
-    return res.json(liste[user])
+    if (liste[user]) { return res.json(liste[user]) }
+    else return res.json({ nachricht: 'User wurde nicht gefunden!' })
 })
 
 app.post('/users/:user/items', (req, res) => {
@@ -30,8 +31,14 @@ app.post('/users/:user/items', (req, res) => {
     if (!liste[user]) {
         liste[user] = []
     }
-
     const { artikel, menge, status, kategorie, fav } = req.body
+
+    //Validierung
+    if (artikel.trim === "") { return res.status(404).json({ nachricht: "Bitte einen Artikel eingeben" }) }
+    if (typeof menge !== "number" || isNaN(menge)) {return res.status(404).json({ nachricht: "Bitte eine gültige Menge eingeben" })}
+    if (menge <= 0) {return res.status(404).json({ nachricht: "Menge muss größer als 0 sein" })}
+
+
     const neueId = liste[user].length > 0 ? Math.max(...liste[user].map(item => item.id)) + 1 : 1
     const neuerArtikel = { artikel, menge, status, kategorie, fav, id: neueId }
     console.log("Neuer Artikel empfangen:", req.body)
@@ -42,6 +49,10 @@ app.post('/users/:user/items', (req, res) => {
 app.put('/users/:user/items/:id', (req, res) => {
     const user = req.params.user
     const id = Number(req.params.id)
+
+    //Validierung
+    if (!liste[user]) { return res.json({ nachricht: "Es wurde kein User gefunden!" }) }
+
     const { artikel, menge, status, kategorie, fav } = req.body
     console.log("Artikel geändert:", req.body)
     const artikelStelle = liste[user].findIndex(item => item.id === id)
@@ -55,6 +66,10 @@ app.put('/users/:user/items/:id', (req, res) => {
 app.delete('/users/:user/items/:id', (req, res) => {
     const user = req.params.user
     const id = Number(req.params.id)
+
+    //Validierung
+    if (!liste[user]) { return res.json({ nachricht: "Es wurde kein User gefunden!" }) }
+
     const artikelStelle = liste[user].findIndex(item => item.id === id)
     console.log("Artikel gelöscht:", req.body)
     if (artikelStelle === -1) {
