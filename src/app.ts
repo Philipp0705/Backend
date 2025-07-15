@@ -13,11 +13,12 @@ interface Artikel {
     kategorie: string
     fav: "yes" | "no"
     id: number
+    user: string
 }
 
 const liste: Artikel[] = [
-    { id: 1, artikel: 'Milch', menge: 2, status: 'done', kategorie: "Kühl", fav: "no" },
-    { id: 2, artikel: 'Brot', menge: 1, status: 'undone', kategorie: "Essen", fav: "yes" }
+    { id: 1, artikel: 'Milch', menge: 2, status: 'done', kategorie: "Kühl", fav: "no", user: "1" },
+    { id: 2, artikel: 'Brot', menge: 1, status: 'undone', kategorie: "Essen", fav: "yes", user: "2" }
 ]
 
 app.use(cors());
@@ -28,9 +29,9 @@ app.get('/items', (req, res) => {
 })
 
 app.post('/items', (req, res) => {
-    const { artikel, menge, status, kategorie, fav } = req.body
+    const { artikel, menge, status, kategorie, fav, user } = req.body
     const neueId = liste.length > 0 ? Math.max(...liste.map(item => item.id)) + 1 : 1
-    const neuerArtikel = { artikel, menge, status, kategorie, fav, id: neueId }
+    const neuerArtikel = { artikel, menge, status, kategorie, fav, id: neueId, user }
     console.log("Neuer Artikel empfangen:", req.body)
     if (artikel.trim() === "") {
         return res.status(404).json({ nachricht: 'Bitte einen gültigen Artikel eingeben' })
@@ -49,7 +50,7 @@ app.post('/items', (req, res) => {
 })
 
 app.put('/items/:id', (req, res) => {
-    const { artikel, menge, status, kategorie, fav } = req.body
+    const { artikel, menge, status, kategorie, fav, user } = req.body
     const id = Number(req.params.id)
     console.log("Artikel geändert:", req.body)
     if (artikel.trim() === "") {
@@ -69,7 +70,7 @@ app.put('/items/:id', (req, res) => {
     if (artikelStelle === -1) {
         return res.status(404).json({ nachricht: 'Artikel wurde nicht gefunden!' })
     }
-    liste[artikelStelle] = { ...liste[artikelStelle], artikel, menge, status, kategorie, fav }
+    liste[artikelStelle] = { ...liste[artikelStelle], artikel, menge, status, kategorie, fav, user }
     return res.json(liste[artikelStelle])
 })
 
